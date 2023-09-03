@@ -102,12 +102,12 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp) // Set your desired start and end margins
+                .padding(start = 16.dp, end = 16.dp)
         ) {
             Text(
                 text = viewModel.speechState.speechResult,
                 modifier = Modifier
-                    .fillMaxWidth() // To make the Text occupy the entire width within the Box
+                    .fillMaxWidth()
                     .align(Alignment.Center)
                     .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)

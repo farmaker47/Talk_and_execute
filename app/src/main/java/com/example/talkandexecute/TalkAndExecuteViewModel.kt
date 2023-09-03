@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,7 +19,6 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
     private var speechRecognizer: SpeechRecognizer? = null
     private val recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
     var speechState by mutableStateOf(SpeechState())
-        set
 
     fun startListening() {
         speechRecognizer?.startListening(recognitionIntent)
