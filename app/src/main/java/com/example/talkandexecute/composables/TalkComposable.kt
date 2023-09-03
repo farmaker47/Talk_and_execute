@@ -1,5 +1,7 @@
 package com.example.talkandexecute.composables
 
+import android.Manifest
+import android.view.MotionEvent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,23 +16,44 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.talkandexecute.R
 import com.example.talkandexecute.TalkAndExecuteViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modifier) {
 
+    // Check for permissions.
+    val permissions = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.RECORD_AUDIO
+        )
+    )
+    when {
+        permissions.allPermissionsGranted -> {
+            // viewModel.someFunction()
+        }
+
+        else -> LaunchedEffect(Unit) { permissions.launchMultiplePermissionRequest() }
+    }
+
+    // Change the border color based on the theme
     val borderColor =
-        if (isSystemInDarkTheme()) Color.White else Color.Black // Change the border color based on the theme
+        if (isSystemInDarkTheme()) Color.White else Color.Black
 
     Column(
         modifier
@@ -42,7 +65,7 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
             text = "Click the button and talk",
             modifier = modifier
                 .align(Alignment.CenterHorizontally)
-                .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
+                // .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
                 .padding(8.dp)
         )
 
@@ -54,7 +77,19 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
             modifier = modifier
                 .size(160.dp)
                 .clip(CircleShape)
-                .clickable { /* Do something */ },
+                .clickable { /* Do something */ }
+                .pointerInteropFilter {
+                when (it.action) {
+                    MotionEvent.ACTION_UP -> {
+                        viewModel.stopListening()
+                    }
+
+                    else -> {
+                        viewModel.startListening()
+                    }
+                }
+                true
+            },
             contentScale = ContentScale.Fit,
             colorFilter = ColorFilter.tint(colorResource(id = R.color.teal_700))
         )
