@@ -7,11 +7,11 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import com.example.talkandexecute.model.SpeechState
 import java.util.Locale
 
 
@@ -19,9 +19,8 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
 
     private var speechRecognizer: SpeechRecognizer? = null
     private val recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-
-    private val _output = MutableStateFlow("")
-    val output: StateFlow<String> = _output
+    var speechState by mutableStateOf(SpeechState())
+        private set
 
     fun startListening() {
         speechRecognizer?.startListening(recognitionIntent)
@@ -39,9 +38,7 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
         speechRecognizer?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 // Called when the recognizer is ready to listen
-                viewModelScope.launch {
-                    _output.emit("Listening...")
-                }
+                speechState = speechState.copy(speechResult = "Listening...")
             }
 
             override fun onBeginningOfSpeech() {
@@ -69,7 +66,7 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
                     val result = matches[0]
-                    Log.v("motion_matches", result)
+                    speechState = speechState.copy(speechResult = result)
                 }
             }
 

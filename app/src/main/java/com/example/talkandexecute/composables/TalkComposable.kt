@@ -97,7 +97,7 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
         Spacer(modifier = modifier.height(16.dp))
 
         Text(
-            text = "Result text",
+            text = viewModel.speechState.speechResult,
             modifier = modifier
                 .align(Alignment.CenterHorizontally)
                 .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
