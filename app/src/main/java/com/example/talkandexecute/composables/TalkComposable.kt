@@ -7,8 +7,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -82,6 +84,7 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
                 when (it.action) {
                     MotionEvent.ACTION_UP -> {
                         viewModel.stopListening()
+                        viewModel.speechState = viewModel.speechState.copy(speechResult = "")
                     }
 
                     else -> {
@@ -96,12 +99,19 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
 
         Spacer(modifier = modifier.height(16.dp))
 
-        Text(
-            text = viewModel.speechState.speechResult,
-            modifier = modifier
-                .align(Alignment.CenterHorizontally)
-                .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
-                .padding(8.dp)
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp) // Set your desired start and end margins
+        ) {
+            Text(
+                text = viewModel.speechState.speechResult,
+                modifier = Modifier
+                    .fillMaxWidth() // To make the Text occupy the entire width within the Box
+                    .align(Alignment.Center)
+                    .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+            )
+        }
     }
 }

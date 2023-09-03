@@ -20,7 +20,7 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
     private var speechRecognizer: SpeechRecognizer? = null
     private val recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
     var speechState by mutableStateOf(SpeechState())
-        private set
+        set
 
     fun startListening() {
         speechRecognizer?.startListening(recognitionIntent)
