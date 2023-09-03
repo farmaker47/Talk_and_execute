@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -106,6 +107,33 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
         ) {
             Text(
                 text = viewModel.speechState.speechResult,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center)
+                    .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+            )
+        }
+
+        Spacer(modifier = modifier.height(16.dp))
+
+        Text(
+            text = "Result from PALM API",
+            modifier = modifier
+                .align(Alignment.CenterHorizontally)
+                // .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
+                .padding(8.dp)
+        )
+
+        Spacer(modifier = modifier.height(16.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp)
+        ) {
+            Text(
+                text = "",
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.Center)
