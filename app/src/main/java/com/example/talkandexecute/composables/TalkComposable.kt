@@ -78,7 +78,7 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
             painter = painterResource(id = R.drawable.baseline_mic_36),
             contentDescription = null,
             modifier = modifier
-                .size(160.dp)
+                .size(140.dp)
                 .clip(CircleShape)
                 .clickable { /* Do something */ }
                 .pointerInteropFilter {
@@ -133,7 +133,7 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
                 .padding(start = 16.dp, end = 16.dp)
         ) {
             Text(
-                text = "",
+                text = viewModel.speechState.palmResult,
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.Center)

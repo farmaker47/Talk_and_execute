@@ -10,11 +10,75 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.talkandexecute.model.SpeechState
+import com.google.ai.generativelanguage.v1beta2.GenerateTextRequest
+import com.google.ai.generativelanguage.v1beta2.TextPrompt
+import com.google.ai.generativelanguage.v1beta2.TextServiceClient
+import com.google.ai.generativelanguage.v1beta2.TextServiceSettings
+import com.google.api.gax.core.FixedCredentialsProvider
+import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider
+import com.google.api.gax.rpc.FixedHeaderProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 
 class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(application) {
+
+    // Directions to set up the PALM API
+    // https://developers.generativeai.google/tutorials/text_android_quickstart
+    private var client: TextServiceClient
+
+    private fun initializeTextServiceClient(
+        apiKey: String
+    ): TextServiceClient {
+        // (This is a workaround because GAPIC java libraries don't yet support API key auth)
+        val transportChannelProvider = InstantiatingGrpcChannelProvider.newBuilder()
+            .setHeaderProvider(FixedHeaderProvider.create(hashMapOf("x-goog-api-key" to /* System.getenv("PALM_API_KEY") */ apiKey)))
+            .build()
+
+        // Create TextServiceSettings
+        val settings = TextServiceSettings.newBuilder()
+            .setTransportChannelProvider(transportChannelProvider)
+            .setCredentialsProvider(FixedCredentialsProvider.create(null))
+            .build()
+
+        // Initialize and return a TextServiceClient
+        return TextServiceClient.create(settings)
+    }
+
+    private fun createPrompt(
+        textContent: String
+    ): TextPrompt {
+        return TextPrompt.newBuilder()
+            .setText(textContent)
+            .build()
+    }
+
+    private fun generateText(
+        request: GenerateTextRequest
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = client.generateText(request)
+                val returnedText = response.candidatesList.last()
+                speechState = speechState.copy(palmResult = returnedText.output)
+            } catch (e: Exception) {
+                // There was an error
+                speechState = speechState.copy(palmResult = "API Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun createTextRequest(prompt: TextPrompt): GenerateTextRequest {
+        return GenerateTextRequest.newBuilder()
+            .setModel("models/text-bison-001") // Required, which model to use to generate the result
+            .setPrompt(prompt) // Required
+            .setTemperature(0.5f) // Optional, controls the randomness of the output
+            .setCandidateCount(1) // Optional, the number of generated texts to return
+            .build()
+    }
 
     private var speechRecognizer: SpeechRecognizer? = null
     private val recognitionIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -29,6 +93,10 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
     }
 
     init {
+        // For PALM API.
+        client = initializeTextServiceClient(
+            apiKey = "1234567"
+        )
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(application)
         recognitionIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
         recognitionIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US)
@@ -65,6 +133,14 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
                 if (!matches.isNullOrEmpty()) {
                     val result = matches[0]
                     speechState = speechState.copy(speechResult = result)
+
+                    //////////////////////////////////////
+                    // For PALM API.
+                    // Create the text prompt
+                    val prompt = createPrompt(result)
+                    // Send the first request
+                    val request = createTextRequest(prompt)
+                    generateText(request)
                 }
             }
 
