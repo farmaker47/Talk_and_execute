@@ -135,9 +135,14 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
                     speechState = speechState.copy(speechResult = result)
 
                     //////////////////////////////////////
+                    val completeString = "If I say $result you have to answer to me what I mean with one of the below options and no other words, " +
+                            "just pick from the below and write only that:\n" +
+                            "volume up\n" +
+                            "volume down\n" +
+                            "unidentified"
                     // For PALM API.
                     // Create the text prompt
-                    val prompt = createPrompt(result)
+                    val prompt = createPrompt(completeString)
                     // Send the first request
                     val request = createTextRequest(prompt)
                     generateText(request)

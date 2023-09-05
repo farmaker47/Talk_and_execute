@@ -1,6 +1,7 @@
 package com.example.talkandexecute.composables
 
 import android.Manifest
+import android.media.AudioManager
 import android.view.MotionEvent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -38,7 +38,14 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modifier) {
+fun TalkComposable(viewModel: TalkAndExecuteViewModel, audioManager: AudioManager, modifier: Modifier = Modifier) {
+
+    // Based on the result adjust the volume.
+    if (viewModel.speechState.palmResult.contains("up")) {
+        audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+    } else if (viewModel.speechState.palmResult.contains("down")) {
+        audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
+    }
 
     // Check for permissions.
     val permissions = rememberMultiplePermissionsState(
@@ -90,6 +97,7 @@ fun TalkComposable(viewModel: TalkAndExecuteViewModel, modifier: Modifier = Modi
 
                     else -> {
                         viewModel.startListening()
+                        viewModel.speechState = viewModel.speechState.copy(palmResult = "")
                     }
                 }
                 true

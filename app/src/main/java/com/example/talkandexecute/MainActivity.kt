@@ -1,5 +1,7 @@
 package com.example.talkandexecute
 
+import android.content.Context
+import android.media.AudioManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,9 +16,11 @@ import com.example.talkandexecute.ui.theme.TalkAndExecuteTheme
 class MainActivity : ComponentActivity() {
 
     private val viewModel: TalkAndExecuteViewModel by viewModels()
+    private lateinit var audioManager: AudioManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        audioManager =  getSystemService(Context.AUDIO_SERVICE) as AudioManager
         setContent {
             TalkAndExecuteTheme {
                 // A surface container using the 'background' color from the theme
@@ -24,7 +28,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    TalkComposable(viewModel)
+                    TalkComposable(viewModel, audioManager)
                 }
             }
         }
