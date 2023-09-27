@@ -99,7 +99,7 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
         )
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(application)
         recognitionIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        recognitionIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US)
+        recognitionIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
 
         speechRecognizer?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
