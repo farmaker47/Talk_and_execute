@@ -12,16 +12,15 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkandexecute.model.SpeechState
-import com.google.ai.generativelanguage.v1beta2.GenerateTextRequest
-import com.google.ai.generativelanguage.v1beta2.TextPrompt
-import com.google.ai.generativelanguage.v1beta2.TextServiceClient
-import com.google.ai.generativelanguage.v1beta2.TextServiceSettings
+import com.google.ai.generativelanguage.v1beta3.GenerateTextRequest
+import com.google.ai.generativelanguage.v1beta3.TextPrompt
+import com.google.ai.generativelanguage.v1beta3.TextServiceClient
+import com.google.ai.generativelanguage.v1beta3.TextServiceSettings
 import com.google.api.gax.core.FixedCredentialsProvider
 import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider
 import com.google.api.gax.rpc.FixedHeaderProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 
 class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(application) {
