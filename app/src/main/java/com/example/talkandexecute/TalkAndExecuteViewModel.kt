@@ -11,7 +11,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import com.example.talkandexecute.model.SpeechState
-import java.util.Locale
 
 
 class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(application) {
@@ -31,7 +30,7 @@ class TalkAndExecuteViewModel(application: Application) : AndroidViewModel(appli
     init {
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(application)
         recognitionIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        recognitionIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US)
+        recognitionIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
 
         speechRecognizer?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
