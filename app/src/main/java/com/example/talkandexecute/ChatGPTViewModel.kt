@@ -6,7 +6,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.talkandexecute.model.SpeechState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -31,8 +35,8 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                 mediaRecorder = MediaRecorder().apply {
                     // Initialization.
                     setAudioSource(MediaRecorder.AudioSource.MIC)
-                    setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-                    setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                    setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                    setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
                     setOutputFile(outputFile.absolutePath)
 
                     // Prepare and start recording.
@@ -52,6 +56,11 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                 mediaRecorder?.stop()
                 mediaRecorder?.release()
                 isRecording = false
+
+                viewModelScope.launch(Dispatchers.Default) {
+                    delay(2000)
+                    transcribeAudio(outputFile)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
