@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.talkandexecute.ChatGPTViewModel
 import com.example.talkandexecute.R
 import com.example.talkandexecute.TalkAndExecuteViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -38,7 +39,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun TalkComposable(viewModel: TalkAndExecuteViewModel, audioManager: AudioManager, modifier: Modifier = Modifier) {
+fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modifier: Modifier = Modifier) {
 
     // Based on the result adjust the volume.
     if (viewModel.speechState.palmResult.contains("up")) {

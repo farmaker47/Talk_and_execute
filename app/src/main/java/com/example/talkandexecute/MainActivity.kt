@@ -16,6 +16,7 @@ import com.example.talkandexecute.ui.theme.TalkAndExecuteTheme
 class MainActivity : ComponentActivity() {
 
     private val viewModel: TalkAndExecuteViewModel by viewModels()
+    private val gptViewModel: ChatGPTViewModel by viewModels()
     private lateinit var audioManager: AudioManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,7 +29,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    TalkComposable(viewModel, audioManager)
+                    TalkComposable(gptViewModel, audioManager)
                 }
             }
         }
