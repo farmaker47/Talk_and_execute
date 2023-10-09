@@ -7,7 +7,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.talkandexecute.model.GeneratedAnswer
 import com.example.talkandexecute.model.SpeechState
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -16,7 +18,10 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -59,7 +64,16 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
 
                 viewModelScope.launch(Dispatchers.Default) {
                     delay(2000)
-                    transcribeAudio(outputFile)
+                    val transcribedText = transcribeAudio(outputFile)
+                    delay(1000)
+                    createChatCompletion(transcribedText)
+                    speechState = try {
+                        val returnedText =  createChatCompletion(transcribedText)
+                        speechState.copy(palmResult = returnedText)
+                    } catch (e: Exception) {
+                        // There was an error
+                        speechState.copy(palmResult = "API Error: ${e.message}")
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -88,11 +102,46 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
 
         val request = Request.Builder()
             .url("https://api.openai.com/v1/audio/transcriptions")
-            .header("Authorization", "Bearer API_KEY")
+            .header("Authorization", "Bearer $API_KEY")
             .post(formBody)
 
         return client.newCall(request.build()).execute().use { response ->
             response.body?.string() ?: ""
+        }
+    }
+
+    @Throws(IOException::class)
+    fun createChatCompletion(prompt: String): String {
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val completeString = "I will say $prompt. What can you do to help me?\n" +
+                "Just pick from the below options and write only the number:\n" +
+                "1 volume up\n" +
+                "2 volume down\n" +
+                "3 unidentified"
+
+        val messagesArray = JSONArray()
+        messagesArray.put(JSONObject().put("role", "system").put("content", "You are a helpful assistant inside a car."))
+        // messagesArray.put(JSONObject().put("role", "user").put("content", "Who won the world series in 2020?"))
+        // messagesArray.put(JSONObject().put("role", "assistant").put("content", "The Los Angeles Dodgers won the World Series in 2020."))
+        messagesArray.put(JSONObject().put("role", "user").put("content", completeString))
+
+        val json = JSONObject()
+            .put("model", "gpt-3.5-turbo")
+            .put("messages", messagesArray)
+
+        val requestBody = json.toString().toRequestBody(mediaType)
+        val request = Request.Builder()
+            .url("https://api.openai.com/v1/chat/completions")
+            .header("Authorization", "Bearer $API_KEY")
+            .post(requestBody)
+            .build()
+
+        val gson = Gson()
+
+        client.newCall(request).execute().use { response ->
+            val chatCompletionResponse = gson.fromJson(response.body?.string() ?: "", GeneratedAnswer::class.java)
+            return chatCompletionResponse.choices?.get(0)?.message?.content.toString()
         }
     }
 
