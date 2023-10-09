@@ -63,10 +63,13 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                 isRecording = false
 
                 viewModelScope.launch(Dispatchers.Default) {
-                    delay(2000)
                     val transcribedText = transcribeAudio(outputFile)
-                    delay(1000)
-                    createChatCompletion(transcribedText)
+                    speechState = try {
+                        speechState.copy(speechResult = transcribedText)
+                    } catch (e: Exception) {
+                        // There was an error
+                        speechState.copy(speechResult = "API Error: ${e.message}")
+                    }
                     speechState = try {
                         val returnedText =  createChatCompletion(transcribedText)
                         speechState.copy(palmResult = returnedText)
@@ -90,7 +93,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         .readTimeout(30, TimeUnit.SECONDS)    // Set read timeout to 30 seconds
         .build()
 
-    fun transcribeAudio(audioFile: File): String {
+    private fun transcribeAudio(audioFile: File): String {
         val audioRequestBody = audioFile.asRequestBody("audio/*".toMediaType())
 
         val formBody = MultipartBody.Builder()
@@ -110,12 +113,11 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    @Throws(IOException::class)
-    fun createChatCompletion(prompt: String): String {
+    private fun createChatCompletion(prompt: String): String {
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val completeString = "I will say $prompt. What can you do to help me?\n" +
-                "Just pick from the below options and write only the number:\n" +
+                "Pick one from the below options and write only the number:\n" +
                 "1 volume up\n" +
                 "2 volume down\n" +
                 "3 unidentified"
