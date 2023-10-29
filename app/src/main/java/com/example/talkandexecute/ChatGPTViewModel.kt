@@ -2,16 +2,17 @@ package com.example.talkandexecute
 
 import android.app.Application
 import android.media.MediaRecorder
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.talkandexecute.classification.AudioClassificationHelper
 import com.example.talkandexecute.model.GeneratedAnswer
 import com.example.talkandexecute.model.SpeechState
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -22,35 +23,63 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONArray
 import org.json.JSONObject
+import org.tensorflow.lite.support.label.Category
 import java.io.File
 import java.io.IOException
+import java.lang.RuntimeException
 import java.util.concurrent.TimeUnit
 
 class ChatGPTViewModel(application: Application) : AndroidViewModel(application) {
 
     var speechState by mutableStateOf(SpeechState())
 
-    private var mediaRecorder: MediaRecorder? = null
+    private var mediaRecorder: MediaRecorder = MediaRecorder()
     private var isRecording: Boolean = false
     val outputFile = File(application.filesDir, "recording.mp3")
+    private val audioClassificationListener = object : AudioClassificationListener {
+        override fun onResult(results: List<Category>, inferenceTime: Long) {
+            Log.v("speech_result", "$results $inferenceTime")
+            if (results.isNotEmpty()) {
+                if (results[0].index == 7) {
+                    startListening()
+                } else if (results[0].index == 0) {
+                    stopListening()
+                }
+            }
+        }
+
+        override fun onError(error: String) {
+            Log.v("speech_result", error)
+        }
+    }
+    private val audioClassificationHelper = AudioClassificationHelper(context = application, listener = audioClassificationListener)
+
+    init {
+        audioClassificationHelper.initClassifier()
+    }
 
     fun startListening() {
         if (!isRecording) {
             try {
-                mediaRecorder = MediaRecorder().apply {
+                mediaRecorder.apply {
                     // Initialization.
                     setAudioSource(MediaRecorder.AudioSource.MIC)
                     setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                    setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+                    setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                    // path to recording, if you want to hear it.
                     setOutputFile(outputFile.absolutePath)
-
-                    // Prepare and start recording.
-                    prepare()
-                    start()
-                    isRecording = true
                 }
+                mediaRecorder.prepare()
+                mediaRecorder.start()
+                isRecording = true
+            } catch (e: IllegalStateException) {
+                Log.e(TAG, e.toString())
+                // Handle the exception -> MediaRecorder is not in the initialized state
+                isRecording = false
             } catch (e: IOException) {
-                e.printStackTrace()
+                Log.e(TAG, e.toString())
+                // Handle the exception -> failed to prepare MediaRecorder
+                isRecording = false
             }
         }
     }
@@ -58,30 +87,35 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
     fun stopListening() {
         if (isRecording) {
             try {
-                mediaRecorder?.stop()
-                mediaRecorder?.release()
+                mediaRecorder.stop()
+                mediaRecorder.reset()
                 isRecording = false
 
                 viewModelScope.launch(Dispatchers.Default) {
                     val transcribedText = transcribeAudio(outputFile)
                     speechState = try {
                         speechState.copy(speechResult = transcribedText)
-                    } catch (e: Exception) {
+                    } catch (e: IOException) {
                         // There was an error
                         speechState.copy(speechResult = "API Error: ${e.message}")
                     }
                     speechState = try {
-                        val returnedText =  createChatCompletion(transcribedText)
+                        val returnedText = createChatCompletion(transcribedText)
                         speechState.copy(palmResult = returnedText)
-                    } catch (e: Exception) {
+                    } catch (e: IOException) {
                         // There was an error
                         speechState.copy(palmResult = "API Error: ${e.message}")
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                mediaRecorder = null
+            } catch (e: RuntimeException) {
+                Log.e(TAG, e.toString())
+                // Handle the exception -> state machine is not in a valid state
+                mediaRecorder.reset()
+                isRecording = false
+            } catch (e: IllegalStateException) {
+                Log.e(TAG, e.toString())
+                mediaRecorder.reset()
+                isRecording = false
             }
         }
     }
@@ -116,11 +150,12 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
     private fun createChatCompletion(prompt: String): String {
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
-        val completeString = "I will say $prompt. What can you do to help me?\n" +
-                "Pick one from the below options and write only the number:\n" +
-                "1 volume up\n" +
-                "2 volume down\n" +
-                "3 unidentified"
+        val completeString = "I will say $prompt. As an assistant how can you help me?\n" +
+                "Pick one from the options below if it is related to volume and write only the two words:\n" +
+                "volume up\n" +
+                "volume down\n" +
+                "if it is not related to volume answer the below two words: \n" +
+                "volume stable"
 
         val messagesArray = JSONArray()
         messagesArray.put(JSONObject().put("role", "system").put("content", "You are a helpful assistant inside a car."))
@@ -129,7 +164,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         messagesArray.put(JSONObject().put("role", "user").put("content", completeString))
 
         val json = JSONObject()
-            .put("model", "gpt-3.5-turbo")
+            .put("model", "gpt-4")
             .put("messages", messagesArray)
 
         val requestBody = json.toString().toRequestBody(mediaType)
@@ -147,7 +182,18 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        mediaRecorder.release()
+        audioClassificationHelper.stopAudioClassification()
+    }
+
     companion object {
 
     }
+}
+
+interface AudioClassificationListener {
+    fun onError(error: String)
+    fun onResult(results: List<Category>, inferenceTime: Long)
 }
