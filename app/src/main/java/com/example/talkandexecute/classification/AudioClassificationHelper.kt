@@ -30,10 +30,6 @@ class AudioClassificationHelper(
         classifyAudio()
     }
 
-    init {
-        initClassifier()
-    }
-
     fun initClassifier() {
         // Set general detection options, e.g. number of used threads
         val baseOptionsBuilder = BaseOptions.builder()
@@ -117,7 +113,7 @@ class AudioClassificationHelper(
     }
 
     companion object {
-        const val THRESHOLD = 0.7f
+        const val THRESHOLD = 0.9f
         const val DEFAULT_NUM_OF_RESULTS = 1
         const val DEFAULT_OVERLAP_VALUE = 0.75f
         const val SPEECH_COMMAND_MODEL = "speech.tflite"
