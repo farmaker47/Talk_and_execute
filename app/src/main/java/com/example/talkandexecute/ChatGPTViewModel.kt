@@ -35,16 +35,27 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
 
     private var mediaRecorder: MediaRecorder = MediaRecorder()
     private var isRecording: Boolean = false
-    val outputFile = File(application.filesDir, "recording.mp3")
+    private var numberOfBackgroundLabel = 0
+    private val outputFile = File(application.filesDir, "recording.mp3")
     private val audioClassificationListener = object : AudioClassificationListener {
         override fun onResult(results: List<Category>, inferenceTime: Long) {
             Log.v("speech_result", "$results $inferenceTime")
             if (results.isNotEmpty()) {
                 if (results[0].index == 7) {
+                    numberOfBackgroundLabel = 0
                     startListening()
                 } else if (results[0].index == 0) {
-                    stopListening()
+                    if (isRecording) {
+                        // Log.v("speech_number", "$numberOfBackgroundLabel")
+                        numberOfBackgroundLabel++
+                        if (numberOfBackgroundLabel > 10) {
+                            numberOfBackgroundLabel = 0
+                            stopListening()
+                        }
+                    }
                 }
+            } else {
+                numberOfBackgroundLabel++
             }
         }
 
@@ -59,7 +70,11 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun startListening() {
+        // Log.v("speech_start", "start")
         if (!isRecording) {
+            isRecording = true
+            numberOfBackgroundLabel = 0
+            // Log.v("speech_start", "true")
             try {
                 mediaRecorder.apply {
                     // Initialization.
@@ -71,21 +86,26 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                 }
                 mediaRecorder.prepare()
                 mediaRecorder.start()
-                isRecording = true
             } catch (e: IllegalStateException) {
                 Log.e(TAG, e.toString())
                 // Handle the exception -> MediaRecorder is not in the initialized state
+                mediaRecorder.reset()
                 isRecording = false
+                numberOfBackgroundLabel = 0
             } catch (e: IOException) {
                 Log.e(TAG, e.toString())
                 // Handle the exception -> failed to prepare MediaRecorder
+                mediaRecorder.reset()
                 isRecording = false
+                numberOfBackgroundLabel = 0
             }
         }
     }
 
     fun stopListening() {
+        // Log.v("speech_stop", "stop")
         if (isRecording) {
+            // Log.v("speech_stop", "true")
             try {
                 mediaRecorder.stop()
                 mediaRecorder.reset()
@@ -101,9 +121,15 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                     }
                     speechState = try {
                         val returnedText = createChatCompletion(transcribedText)
+                        mediaRecorder.reset()
+                        isRecording = false
+                        numberOfBackgroundLabel = 0
                         speechState.copy(palmResult = returnedText)
                     } catch (e: IOException) {
                         // There was an error
+                        mediaRecorder.reset()
+                        isRecording = false
+                        numberOfBackgroundLabel = 0
                         speechState.copy(palmResult = "API Error: ${e.message}")
                     }
                 }
@@ -112,10 +138,12 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                 // Handle the exception -> state machine is not in a valid state
                 mediaRecorder.reset()
                 isRecording = false
+                numberOfBackgroundLabel = 0
             } catch (e: IllegalStateException) {
                 Log.e(TAG, e.toString())
                 mediaRecorder.reset()
                 isRecording = false
+                numberOfBackgroundLabel = 0
             }
         }
     }
@@ -150,7 +178,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
     private fun createChatCompletion(prompt: String): String {
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
-        val completeString = "I will say $prompt. As an assistant how can you help me?\n" +
+        val completeString = "I say $prompt. As an assistant how can you help me?\n" +
                 "Pick one from the options below if it is related to volume and write only the two words:\n" +
                 "volume up\n" +
                 "volume down\n" +
@@ -164,7 +192,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         messagesArray.put(JSONObject().put("role", "user").put("content", completeString))
 
         val json = JSONObject()
-            .put("model", "gpt-4")
+            .put("model", "gpt-3.5-turbo")
             .put("messages", messagesArray)
 
         val requestBody = json.toString().toRequestBody(mediaType)
