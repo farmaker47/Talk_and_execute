@@ -45,17 +45,18 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                     numberOfBackgroundLabel = 0
                     startListening()
                 } else if (results[0].index == 0) {
-                    if (isRecording) {
-                        // Log.v("speech_number", "$numberOfBackgroundLabel")
-                        numberOfBackgroundLabel++
-                        if (numberOfBackgroundLabel > 10) {
-                            numberOfBackgroundLabel = 0
-                            stopListening()
-                        }
-                    }
+                    numberOfBackgroundLabel++
                 }
             } else {
                 numberOfBackgroundLabel++
+            }
+
+            if (isRecording) {
+                // Log.v("speech_number", "$numberOfBackgroundLabel")
+                if (numberOfBackgroundLabel > 10) {
+                    numberOfBackgroundLabel = 0
+                    stopListening()
+                }
             }
         }
 
@@ -89,15 +90,11 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
             } catch (e: IllegalStateException) {
                 Log.e(TAG, e.toString())
                 // Handle the exception -> MediaRecorder is not in the initialized state
-                mediaRecorder.reset()
-                isRecording = false
-                numberOfBackgroundLabel = 0
+                resetRecording()
             } catch (e: IOException) {
                 Log.e(TAG, e.toString())
                 // Handle the exception -> failed to prepare MediaRecorder
-                mediaRecorder.reset()
-                isRecording = false
-                numberOfBackgroundLabel = 0
+                resetRecording()
             }
         }
     }
@@ -121,31 +118,29 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                     }
                     speechState = try {
                         val returnedText = createChatCompletion(transcribedText)
-                        mediaRecorder.reset()
-                        isRecording = false
-                        numberOfBackgroundLabel = 0
+                        resetRecording()
                         speechState.copy(palmResult = returnedText)
                     } catch (e: IOException) {
                         // There was an error
-                        mediaRecorder.reset()
-                        isRecording = false
-                        numberOfBackgroundLabel = 0
+                        resetRecording()
                         speechState.copy(palmResult = "API Error: ${e.message}")
                     }
                 }
             } catch (e: RuntimeException) {
                 Log.e(TAG, e.toString())
                 // Handle the exception -> state machine is not in a valid state
-                mediaRecorder.reset()
-                isRecording = false
-                numberOfBackgroundLabel = 0
+                resetRecording()
             } catch (e: IllegalStateException) {
                 Log.e(TAG, e.toString())
-                mediaRecorder.reset()
-                isRecording = false
-                numberOfBackgroundLabel = 0
+                resetRecording()
             }
         }
+    }
+
+    private fun resetRecording() {
+        mediaRecorder.reset()
+        isRecording = false
+        numberOfBackgroundLabel = 0
     }
 
     private var loggingInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
