@@ -60,3 +60,7 @@ data class Usage(
     val total_tokens: Int
 
 )
+
+data class AudioToText (
+    @SerializedName("text" ) var text : String = ""
+)

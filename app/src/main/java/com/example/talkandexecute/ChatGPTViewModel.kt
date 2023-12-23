@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkandexecute.classification.AudioClassificationHelper
+import com.example.talkandexecute.model.AudioToText
 import com.example.talkandexecute.model.GeneratedAnswer
 import com.example.talkandexecute.model.SpeechState
 import com.google.gson.Gson
@@ -43,7 +44,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
             if (results.isNotEmpty()) {
                 if (results[0].index == 7) {
                     numberOfBackgroundLabel = 0
-                    startListening()
+                    // startListening()
                 } else if (results[0].index == 0) {
                     numberOfBackgroundLabel++
                 }
@@ -55,7 +56,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                 // Log.v("speech_number", "$numberOfBackgroundLabel")
                 if (numberOfBackgroundLabel > 10) {
                     numberOfBackgroundLabel = 0
-                    stopListening()
+                    // stopListening()
                 }
             }
         }
@@ -165,8 +166,10 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
             .header("Authorization", "Bearer $API_KEY")
             .post(formBody)
 
+        val gson = Gson()
         return client.newCall(request.build()).execute().use { response ->
-            response.body?.string() ?: ""
+            val audioCompletionResponse = gson.fromJson(response.body?.string() ?: "", AudioToText::class.java)
+            audioCompletionResponse.text
         }
     }
 
