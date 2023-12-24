@@ -49,6 +49,12 @@ android {
             excludes += "META-INF/DEPENDENCIES" // And this line
         }
     }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
     /*packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
