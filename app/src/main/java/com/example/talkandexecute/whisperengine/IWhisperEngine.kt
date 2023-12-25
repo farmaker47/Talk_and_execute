@@ -1,12 +1,11 @@
-package com.example.talkandexecute.whisperengine;
+package com.example.talkandexecute.whisperengine
 
-import java.io.IOException;
+import java.io.IOException
 
-public interface IWhisperEngine {
-    boolean isInitialized();
-    void interrupt();
-    void setUpdateListener(IWhisperListener listener);
-    boolean initialize(String modelPath, String vocabPath, boolean multilingual) throws IOException;
-    String transcribeFile(String wavePath);
-    String transcribeBuffer(float[] samples);
+interface IWhisperEngine {
+    val isInitialized: Boolean
+
+    @Throws(IOException::class)
+    fun initialize(modelPath: String?, vocabPath: String?, multilingual: Boolean): Boolean
+    fun transcribeFile(wavePath: String?): String
 }

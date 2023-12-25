@@ -39,11 +39,6 @@ public class WhisperEngine implements IWhisperEngine {
         return mIsInitialized;
     }
 
-    @Override
-    public void interrupt() {
-
-    }
-
     public void updateStatus(String message) {
         if (mUpdateListener != null)
             mUpdateListener.onUpdateReceived(message);
@@ -88,11 +83,6 @@ public class WhisperEngine implements IWhisperEngine {
         Log.v("inference_time_mel", String.valueOf(System.currentTimeMillis()-time2));
 
         return result;
-    }
-
-    @Override
-    public String transcribeBuffer(float[] samples) {
-        return null;
     }
 
     private void loadModel(String modelPath) throws IOException {
