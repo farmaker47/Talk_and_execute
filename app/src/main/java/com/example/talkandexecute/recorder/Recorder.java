@@ -18,24 +18,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Recorder {
     public static final String TAG = "Recorder";
-    public static final String ACTION_STOP = "Stop";
-    public static final String ACTION_RECORD = "Record";
-    public static final String MSG_RECORDING = "Recording...";
-    public static final String MSG_RECORDING_DONE = "Recording done...!";
 
     private final Context mContext;
     private final AtomicBoolean mInProgress = new AtomicBoolean(false);
 
     private String mWavFilePath = null;
     private Thread mExecutorThread = null;
-    private IRecorderListener mListener = null;
 
     public Recorder(Context context) {
         mContext = context;
-    }
-
-    public void setListener(IRecorderListener listener) {
-        mListener = listener;
     }
 
     public void setFilePath(String wavFile) {
@@ -44,7 +35,7 @@ public class Recorder {
 
     public void start() {
         if (mInProgress.get()) {
-            Log.d(TAG, "Recording is already in progress...");
+            Log.d(TAG, "Recording is in progress...");
             return;
         }
 
@@ -68,28 +59,12 @@ public class Recorder {
         }
     }
 
-    public boolean isInProgress() {
-        return mInProgress.get();
-    }
-
-    private void sendUpdate(String message) {
-        if (mListener != null)
-            mListener.onUpdateReceived(message);
-    }
-
-    private void sendData(float[] samples) {
-        if (mListener != null)
-            mListener.onDataReceived(samples);
-    }
-
     private void threadFunction() {
         try {
             if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "AudioRecord permission is not granted");
                 return;
             }
-
-            sendUpdate(MSG_RECORDING);
 
             int channels = 1;
             int bytesPerSample = 2;
@@ -111,8 +86,6 @@ public class Recorder {
             int totalBytesRead = 0;
             byte[] audioData = new byte[bufferSize];
             while (mInProgress.get() && (totalBytesRead < bufferSize30Sec)) {
-                sendUpdate(MSG_RECORDING + timer + "s");
-
                 int bytesRead = audioRecord.read(audioData, 0, bufferSize);
                 if (bytesRead > 0) {
                     buffer30Sec.put(audioData, 0, bytesRead);
@@ -144,9 +117,6 @@ public class Recorder {
 
                         // Reset the ByteBuffer for writing again
                         bufferRealtime.clear();
-
-                        // Send samples for transcription
-                        sendData(samples);
                     }
                 }
             }
@@ -157,11 +127,8 @@ public class Recorder {
             // Save 30 seconds of recording buffer in wav file
             WaveUtil.createWaveFile(mWavFilePath, buffer30Sec.array(), sampleRateInHz, channels, bytesPerSample);
             Log.d(TAG, "Recorded file: " + mWavFilePath);
-
-            sendUpdate(MSG_RECORDING_DONE);
         } catch (Exception e) {
             Log.e(TAG, "Error...", e);
-            sendUpdate(e.getMessage());
         }
     }
 }
