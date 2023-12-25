@@ -92,4 +92,14 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     // For audio classification.
     implementation("org.tensorflow:tensorflow-lite-task-audio:0.4.4")
+    // For TF Lite
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
+    implementation("org.tensorflow:tensorflow-lite-gpu-delegate-plugin:0.4.4")
+//    implementation 'org.tensorflow:tensorflow-lite-api:2.11.0'
+//    implementation 'org.tensorflow:tensorflow-lite-support-api:0.4.3'
+//    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.11.0'
+
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.11.0")
+    implementation("org.tensorflow:tensorflow-lite-gpu-api:2.11.0")
 }

@@ -12,6 +12,8 @@ import com.example.talkandexecute.classification.AudioClassificationHelper
 import com.example.talkandexecute.model.AudioToText
 import com.example.talkandexecute.model.GeneratedAnswer
 import com.example.talkandexecute.model.SpeechState
+import com.example.talkandexecute.whisperengine.IWhisperEngine
+import com.example.talkandexecute.whisperengine.WhisperEngine
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,7 +29,6 @@ import org.json.JSONObject
 import org.tensorflow.lite.support.label.Category
 import java.io.File
 import java.io.IOException
-import java.lang.RuntimeException
 import java.util.concurrent.TimeUnit
 
 class ChatGPTViewModel(application: Application) : AndroidViewModel(application) {
@@ -65,7 +66,9 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
             Log.v("speech_result", error)
         }
     }
-    private val audioClassificationHelper = AudioClassificationHelper(context = application, listener = audioClassificationListener)
+    private val mWhisperEngine: IWhisperEngine = WhisperEngine()
+    private val audioClassificationHelper =
+        AudioClassificationHelper(context = application, listener = audioClassificationListener)
 
     init {
         audioClassificationHelper.initClassifier()
@@ -144,7 +147,8 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         numberOfBackgroundLabel = 0
     }
 
-    private var loggingInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+    private var loggingInterceptor =
+        HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
     private val client = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS) // Set connection timeout to 30 seconds
@@ -168,7 +172,8 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
 
         val gson = Gson()
         return client.newCall(request.build()).execute().use { response ->
-            val audioCompletionResponse = gson.fromJson(response.body?.string() ?: "", AudioToText::class.java)
+            val audioCompletionResponse =
+                gson.fromJson(response.body?.string() ?: "", AudioToText::class.java)
             audioCompletionResponse.text
         }
     }
@@ -184,7 +189,10 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                 "volume stable"
 
         val messagesArray = JSONArray()
-        messagesArray.put(JSONObject().put("role", "system").put("content", "You are a helpful assistant inside a car."))
+        messagesArray.put(
+            JSONObject().put("role", "system")
+                .put("content", "You are a helpful assistant inside a car.")
+        )
         // messagesArray.put(JSONObject().put("role", "user").put("content", "Who won the world series in 2020?"))
         // messagesArray.put(JSONObject().put("role", "assistant").put("content", "The Los Angeles Dodgers won the World Series in 2020."))
         messagesArray.put(JSONObject().put("role", "user").put("content", completeString))
@@ -203,7 +211,8 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         val gson = Gson()
 
         client.newCall(request).execute().use { response ->
-            val chatCompletionResponse = gson.fromJson(response.body?.string() ?: "", GeneratedAnswer::class.java)
+            val chatCompletionResponse =
+                gson.fromJson(response.body?.string() ?: "", GeneratedAnswer::class.java)
             return chatCompletionResponse.choices?.get(0)?.message?.content.toString()
         }
     }
