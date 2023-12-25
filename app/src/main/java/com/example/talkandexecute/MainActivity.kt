@@ -12,6 +12,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.talkandexecute.composables.TalkComposable
 import com.example.talkandexecute.ui.theme.TalkAndExecuteTheme
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
 
 class MainActivity : ComponentActivity() {
 
