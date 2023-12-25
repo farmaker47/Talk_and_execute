@@ -1,6 +1,7 @@
 package com.example.talkandexecute
 
 import android.app.Application
+import android.content.Context
 import android.media.MediaRecorder
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -38,7 +39,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
     private var mediaRecorder: MediaRecorder = MediaRecorder()
     private var isRecording: Boolean = false
     private var numberOfBackgroundLabel = 0
-    private val outputFile = File(application.filesDir, "recording.mp3")
+    private val outputFile = File(application.filesDir, RECORDING_FILE)
     private val audioClassificationListener = object : AudioClassificationListener {
         override fun onResult(results: List<Category>, inferenceTime: Long) {
             Log.v("speech_result", "$results $inferenceTime")
@@ -66,12 +67,14 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
             Log.v("speech_result", error)
         }
     }
-    private val mWhisperEngine: IWhisperEngine = WhisperEngine()
+    private val whisperEngine: IWhisperEngine = WhisperEngine(application)
     private val audioClassificationHelper =
         AudioClassificationHelper(context = application, listener = audioClassificationListener)
 
     init {
         audioClassificationHelper.initClassifier()
+        getFilePath(VOCAB_PATH, application)
+        whisperEngine.initialize(MODEL_PATH, getFilePath(VOCAB_PATH, application), false)
     }
 
     fun startListening() {
@@ -113,7 +116,8 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                 isRecording = false
 
                 viewModelScope.launch(Dispatchers.Default) {
-                    val transcribedText = transcribeAudio(outputFile)
+                    whisperEngine.transcribeFile(outputFile.absolutePath)
+                    /*val transcribedText = transcribeAudio(outputFile)
                     speechState = try {
                         speechState.copy(speechResult = transcribedText)
                     } catch (e: IOException) {
@@ -128,7 +132,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                         // There was an error
                         resetRecording()
                         speechState.copy(palmResult = "API Error: ${e.message}")
-                    }
+                    }*/
                 }
             } catch (e: RuntimeException) {
                 Log.e(TAG, e.toString())
@@ -225,6 +229,19 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
 
     companion object {
 
+        private const val MODEL_PATH = "whisper_tiny_english_14.tflite"
+        private const val VOCAB_PATH = "filters_vocab_en.bin"
+        private const val RECORDING_FILE = "recording.mp3"
+    }
+
+    // Returns file path for vocab .bin file
+    private fun getFilePath(assetName: String, context: Context): String? {
+        val outfile = File(context.filesDir, assetName)
+        if (!outfile.exists()) {
+            Log.d(TAG, "File not found - " + outfile.absolutePath)
+        }
+        Log.d(TAG, "Returned asset path: " + outfile.absolutePath)
+        return outfile.absolutePath
     }
 }
 

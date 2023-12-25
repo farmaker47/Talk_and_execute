@@ -1,5 +1,7 @@
 package com.example.talkandexecute.whisperengine;
 
+import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.util.Log;
 
 import com.example.talkandexecute.utils.WaveUtil;
@@ -15,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 public class WhisperEngine implements IWhisperEngine {
@@ -25,10 +28,11 @@ public class WhisperEngine implements IWhisperEngine {
     private Interpreter mInterpreter = null;
     private IWhisperListener mUpdateListener = null;
     private final long nativePtr; // Native pointer to the TFLiteEngine instance
+    private Context context;
 
-
-    public WhisperEngine() {
+    public WhisperEngine(Context context) {
         nativePtr = createEngine();
+        this.context = context;
     }
 
     @Override
@@ -54,7 +58,6 @@ public class WhisperEngine implements IWhisperEngine {
     public boolean initialize(String modelPath, String vocabPath, boolean multilingual) throws IOException {
         // Load model
         loadModel(modelPath);
-        // loadNativeModel(nativePtr, modelPath, multilingual);
         Log.d(TAG, "Model is loaded..." + modelPath);
 
         // Load filters and vocab
@@ -95,11 +98,13 @@ public class WhisperEngine implements IWhisperEngine {
 
     // Load TFLite model
     private void loadModel(String modelPath) throws IOException {
-        FileInputStream fileInputStream = new FileInputStream(modelPath);
-        FileChannel fileChannel = fileInputStream.getChannel();
-        long startOffset = 0;
-        long declaredLength = fileChannel.size();
-        ByteBuffer tfliteModel = fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+        AssetFileDescriptor fileDescriptor = context.getAssets().openFd(modelPath);
+        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = inputStream.getChannel();
+        long startOffset = fileDescriptor.getStartOffset();
+        long declaredLength = fileDescriptor.getDeclaredLength();
+        MappedByteBuffer retFile = fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+        fileDescriptor.close();
 
         // Set the number of threads for inference
         //Interpreter.Options options = new Interpreter.Options();
@@ -118,21 +123,22 @@ public class WhisperEngine implements IWhisperEngine {
             // if the GPU is not supported, run on 4 threads
             options.setNumThreads(4);
         }*/
-        Interpreter.Options options = new Interpreter.Options();
-        CompatibilityList compatList = new CompatibilityList();
+        Interpreter.Options tfliteOptions = new Interpreter.Options();
+        tfliteOptions.setNumThreads(Runtime.getRuntime().availableProcessors());
+        //tfliteOptions.setUseNNAPI(true);
 
-        if(compatList.isDelegateSupportedOnThisDevice()){
-            // if the device has a supported GPU, add the GPU delegate
-            //GpuDelegate.Options delegateOptions = compatList.getBestOptionsForThisDevice();
-            //GpuDelegate gpuDelegate = new GpuDelegate();
-            //options.addDelegate(gpuDelegate);
-            options.setNumThreads(10);
-        } else {
-            // if the GPU is not supported, run on 4 threads
+//        if(compatList.isDelegateSupportedOnThisDevice()){
+//            // if the device has a supported GPU, add the GPU delegate
+//            //GpuDelegate.Options delegateOptions = compatList.getBestOptionsForThisDevice();
+//            //GpuDelegate gpuDelegate = new GpuDelegate();
+//            //options.addDelegate(gpuDelegate);
+//            options.setNumThreads(10);
+//        } else {
+//            // if the GPU is not supported, run on 4 threads
+//
+//        }
 
-        }
-
-        mInterpreter = new Interpreter(tfliteModel, options);
+        mInterpreter = new Interpreter(retFile, tfliteOptions);
     }
 
     private float[] getMelSpectrogram(String wavePath) {

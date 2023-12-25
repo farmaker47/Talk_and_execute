@@ -18,6 +18,11 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        /*externalNativeBuild {
+            cmake {
+                cppFlags += ""
+            }
+        }*/
     }
 
     buildTypes {
