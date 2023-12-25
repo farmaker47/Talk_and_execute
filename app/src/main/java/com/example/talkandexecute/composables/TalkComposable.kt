@@ -92,12 +92,16 @@ fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modi
                 .pointerInteropFilter {
                 when (it.action) {
                     MotionEvent.ACTION_UP -> {
-                        viewModel.stopListening()
+                        // viewModel.stopListening()
+                        // or for offline transcription
+                        viewModel.stopRecordingWav()
                         viewModel.speechState = viewModel.speechState.copy(speechResult = "")
                     }
 
                     else -> {
-                        viewModel.startListening()
+                        // viewModel.startListening()
+                        // or for offline transcription
+                        viewModel.startRecordingWav()
                         viewModel.speechState = viewModel.speechState.copy(palmResult = "")
                     }
                 }

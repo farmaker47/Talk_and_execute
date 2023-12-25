@@ -13,6 +13,7 @@ import com.example.talkandexecute.classification.AudioClassificationHelper
 import com.example.talkandexecute.model.AudioToText
 import com.example.talkandexecute.model.GeneratedAnswer
 import com.example.talkandexecute.model.SpeechState
+import com.example.talkandexecute.recorder.Recorder
 import com.example.talkandexecute.whisperengine.IWhisperEngine
 import com.example.talkandexecute.whisperengine.WhisperEngine
 import com.google.gson.Gson
@@ -40,6 +41,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
     private var isRecording: Boolean = false
     private var numberOfBackgroundLabel = 0
     private val outputFile = File(application.filesDir, RECORDING_FILE)
+    private val outputFileWav = File(application.filesDir, RECORDING_FILE_WAV)
     private val audioClassificationListener = object : AudioClassificationListener {
         override fun onResult(results: List<Category>, inferenceTime: Long) {
             Log.v("speech_result", "$results $inferenceTime")
@@ -68,13 +70,52 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         }
     }
     private val whisperEngine: IWhisperEngine = WhisperEngine(application)
+    private val recorder: Recorder = Recorder(application)
     private val audioClassificationHelper =
         AudioClassificationHelper(context = application, listener = audioClassificationListener)
 
     init {
         audioClassificationHelper.initClassifier()
-        getFilePath(VOCAB_PATH, application)
         whisperEngine.initialize(MODEL_PATH, getFilePath(VOCAB_PATH, application), false)
+        recorder.setFilePath(getFilePath(RECORDING_FILE_WAV, application) )
+    }
+
+    fun startRecordingWav() {
+        recorder.start()
+    }
+
+    fun stopRecordingWav() {
+        recorder.stop()
+
+        try {
+            viewModelScope.launch(Dispatchers.Default) {
+                // Offline speech to text
+                val transcribedText = whisperEngine.transcribeFile(outputFileWav.absolutePath)
+                speechState = try {
+                    speechState.copy(speechResult = transcribedText)
+                } catch (e: IOException) {
+                    // There was an error
+                    speechState.copy(speechResult = "API Error: ${e.message}")
+                }
+                // Send text to ChatGPT
+                speechState = try {
+                    val returnedText = createChatCompletion(transcribedText)
+                    resetRecording()
+                    speechState.copy(palmResult = returnedText)
+                } catch (e: IOException) {
+                    // There was an error
+                    resetRecording()
+                    speechState.copy(palmResult = "API Error: ${e.message}")
+                }
+            }
+        } catch (e: RuntimeException) {
+            Log.e(TAG, e.toString())
+            // Handle the exception -> state machine is not in a valid state
+            resetRecording()
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, e.toString())
+            resetRecording()
+        }
     }
 
     fun startListening() {
@@ -116,8 +157,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                 isRecording = false
 
                 viewModelScope.launch(Dispatchers.Default) {
-                    whisperEngine.transcribeFile(outputFile.absolutePath)
-                    /*val transcribedText = transcribeAudio(outputFile)
+                    val transcribedText = transcribeAudio(outputFile)
                     speechState = try {
                         speechState.copy(speechResult = transcribedText)
                     } catch (e: IOException) {
@@ -132,7 +172,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                         // There was an error
                         resetRecording()
                         speechState.copy(palmResult = "API Error: ${e.message}")
-                    }*/
+                    }
                 }
             } catch (e: RuntimeException) {
                 Log.e(TAG, e.toString())
@@ -232,6 +272,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         private const val MODEL_PATH = "whisper_tiny_english_14.tflite"
         private const val VOCAB_PATH = "filters_vocab_en.bin"
         private const val RECORDING_FILE = "recording.mp3"
+        private const val RECORDING_FILE_WAV = "recording.wav"
     }
 
     // Returns file path for vocab .bin file

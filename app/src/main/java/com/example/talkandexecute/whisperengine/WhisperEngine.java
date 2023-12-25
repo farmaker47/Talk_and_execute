@@ -95,7 +95,6 @@ public class WhisperEngine implements IWhisperEngine {
         return null;
     }
 
-    // Load TFLite model
     private void loadModel(String modelPath) throws IOException {
         AssetFileDescriptor fileDescriptor = context.getAssets().openFd(modelPath);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
