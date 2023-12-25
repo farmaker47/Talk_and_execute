@@ -25,7 +25,6 @@ public class WhisperEngine implements IWhisperEngine {
 
     private boolean mIsInitialized = false;
     private Interpreter mInterpreter = null;
-    private IWhisperListener mUpdateListener = null;
     private final long nativePtr; // Native pointer to the TFLiteEngine instance
     private Context context;
 
@@ -37,15 +36,6 @@ public class WhisperEngine implements IWhisperEngine {
     @Override
     public boolean isInitialized() {
         return mIsInitialized;
-    }
-
-    public void updateStatus(String message) {
-        if (mUpdateListener != null)
-            mUpdateListener.onUpdateReceived(message);
-    }
-
-    public void setUpdateListener(IWhisperListener listener) {
-        mUpdateListener = listener;
     }
 
     @Override
