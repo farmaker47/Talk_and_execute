@@ -131,7 +131,7 @@ fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modi
         Spacer(modifier = modifier.height(16.dp))
 
         Text(
-            text = "Result from PALM API",
+            text = "Result from LLMs",
             modifier = modifier
                 .align(Alignment.CenterHorizontally)
                 // .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
