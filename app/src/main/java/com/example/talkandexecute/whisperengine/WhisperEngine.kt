@@ -71,37 +71,9 @@ class WhisperEngine(private val context: Context) : IWhisperEngine {
         val retFile = fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
         fileDescriptor.close()
 
-        // Set the number of threads for inference
-        //Interpreter.Options options = new Interpreter.Options();
-        //options.setNumThreads(Runtime.getRuntime().availableProcessors());
-
-
-        // Initialize interpreter with GPU delegate
-        /*Interpreter.Options options = new Interpreter.Options();
-        GpuDelegate gpuDelegate = new GpuDelegate();
-        options.addDelegate(gpuDelegate);*/
-
-        /*if(compatList.isDelegateSupportedOnThisDevice()){
-            // if the device has a supported GPU, add the GPU delegate
-
-        } else {
-            // if the GPU is not supported, run on 4 threads
-            options.setNumThreads(4);
-        }*/
         val tfliteOptions = Interpreter.Options()
         tfliteOptions.setNumThreads(Runtime.getRuntime().availableProcessors())
-        //tfliteOptions.setUseNNAPI(true);
 
-//        if(compatList.isDelegateSupportedOnThisDevice()){
-//            // if the device has a supported GPU, add the GPU delegate
-//            //GpuDelegate.Options delegateOptions = compatList.getBestOptionsForThisDevice();
-//            //GpuDelegate gpuDelegate = new GpuDelegate();
-//            //options.addDelegate(gpuDelegate);
-//            options.setNumThreads(10);
-//        } else {
-//            // if the GPU is not supported, run on 4 threads
-//
-//        }
         mInterpreter = Interpreter(retFile, tfliteOptions)
     }
 

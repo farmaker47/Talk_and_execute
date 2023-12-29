@@ -242,7 +242,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         messagesArray.put(JSONObject().put("role", "user").put("content", completeString))
 
         val json = JSONObject()
-            .put("model", "gpt-3.5-turbo")
+            .put("model", "gpt-3.5-turbo") // new gpt-3.5-turbo-1106
             .put("messages", messagesArray)
 
         val requestBody = json.toString().toRequestBody(mediaType)
