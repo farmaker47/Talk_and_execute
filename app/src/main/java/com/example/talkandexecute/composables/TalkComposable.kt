@@ -10,11 +10,14 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -31,9 +34,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.talkandexecute.ChatGPTViewModel
 import com.example.talkandexecute.R
-import com.example.talkandexecute.TalkAndExecuteViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
@@ -42,9 +45,9 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modifier: Modifier = Modifier) {
 
     // Based on the result adjust the volume.
-    if (viewModel.speechState.palmResult.contains("up")) {
+    if (viewModel.speechState.geminiResult.contains("up")) {
         audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
-    } else if (viewModel.speechState.palmResult.contains("down")) {
+    } else if (viewModel.speechState.geminiResult.contains("down")) {
         audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
     }
 
@@ -102,7 +105,7 @@ fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modi
                         // viewModel.startListening()
                         // or for offline transcription
                         viewModel.startRecordingWav()
-                        viewModel.speechState = viewModel.speechState.copy(palmResult = "")
+                        viewModel.speechState = viewModel.speechState.copy(geminiResult = "")
                     }
                 }
                 true
@@ -138,6 +141,42 @@ fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modi
                 .padding(8.dp)
         )
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Button for ChatGPT
+            Text(
+                text = "ChatGPT",
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 16.dp, horizontal = 16.dp)
+                    .height(32.dp)
+                    .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
+                    .clickable { viewModel.pickAPI(false) }
+                    .wrapContentSize(Alignment.Center),
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            Spacer(modifier = modifier.width(16.dp))
+
+            // Button for Gemini
+            Text(
+                text = "Gemini",
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 16.dp, horizontal = 16.dp)
+                    .height(32.dp)
+                    .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
+                    .clickable { viewModel.pickAPI(true) }
+                    .wrapContentSize(Alignment.Center),
+                color = Color.White,
+                fontSize = 16.sp
+            )
+        }
+
         Spacer(modifier = modifier.height(16.dp))
 
         Box(
@@ -146,7 +185,7 @@ fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modi
                 .padding(start = 16.dp, end = 16.dp)
         ) {
             Text(
-                text = viewModel.speechState.palmResult,
+                text = viewModel.speechState.geminiResult,
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.Center)

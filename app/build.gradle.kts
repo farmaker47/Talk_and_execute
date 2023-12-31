@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.example.talkandexecute"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.talkandexecute"
         minSdk = 26
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -87,9 +87,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("com.google.accompanist:accompanist-permissions:0.30.1")
-    // For PALM API.
-    implementation("com.google.cloud:gapic-google-cloud-ai-generativelanguage-v1beta3-java:0.0.0-SNAPSHOT")
-    implementation("io.grpc:grpc-okhttp:1.53.0")
+
     // For ChatGPT API.
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -105,4 +103,6 @@ dependencies {
 
     implementation("org.tensorflow:tensorflow-lite-gpu:2.11.0")
     implementation("org.tensorflow:tensorflow-lite-gpu-api:2.11.0")
+
+    implementation("com.google.ai.client.generativeai:generativeai:0.1.1")
 }

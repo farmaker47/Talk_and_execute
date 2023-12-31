@@ -34,7 +34,6 @@ import java.io.OutputStream
 
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: TalkAndExecuteViewModel by viewModels()
     private val gptViewModel: ChatGPTViewModel by viewModels()
     private lateinit var audioManager: AudioManager
 
