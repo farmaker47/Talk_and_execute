@@ -17,6 +17,7 @@ import com.example.talkandexecute.recorder.Recorder
 import com.example.talkandexecute.whisperengine.IWhisperEngine
 import com.example.talkandexecute.whisperengine.WhisperEngine
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.PromptBlockedException
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -122,7 +123,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
             viewModelScope.launch(Dispatchers.Default) {
                 speechState = if (!geminiAPI) {
                     val returnedText = createChatCompletion(transcribedText)
-                    speechState.copy(geminiResult = returnedText)
+                    speechState.copy(llmResult = returnedText)
                 } else {
                     val completeString =
                         "I say $transcribedText. As an assistant how can you help me?\n" +
@@ -133,13 +134,17 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                                 "volume stable"
                     Log.v("viewmodel", completeString)
                     val returnedText = generativeModel.generateContent(completeString)
-                    speechState.copy(geminiResult = returnedText.text!!)
+                    speechState.copy(llmResult = returnedText.text!!)
                 }
             }
         } catch (e: IOException) {
             // There was an error
             resetRecording()
-            speechState = speechState.copy(geminiResult = "API Error: ${e.message}")
+            speechState = speechState.copy(llmResult = "API Error: ${e.message}")
+        } catch (e: PromptBlockedException) {
+            // There was an error
+            resetRecording()
+            speechState = speechState.copy(llmResult = "API Error: ${e.message}")
         }
     }
 
@@ -192,11 +197,11 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
                     speechState = try {
                         val returnedText = createChatCompletion(transcribedText)
                         resetRecording()
-                        speechState.copy(geminiResult = returnedText)
+                        speechState.copy(llmResult = returnedText)
                     } catch (e: IOException) {
                         // There was an error
                         resetRecording()
-                        speechState.copy(geminiResult = "API Error: ${e.message}")
+                        speechState.copy(llmResult = "API Error: ${e.message}")
                     }
                 }
             } catch (e: RuntimeException) {
@@ -267,7 +272,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         messagesArray.put(JSONObject().put("role", "user").put("content", completeString))
 
         val json = JSONObject()
-            .put("model", "gpt-3.5-turbo") // new gpt-3.5-turbo-1106
+            .put("model", "gpt-4") // new gpt-3.5-turbo-1106
             .put("messages", messagesArray)
 
         val requestBody = json.toString().toRequestBody(mediaType)

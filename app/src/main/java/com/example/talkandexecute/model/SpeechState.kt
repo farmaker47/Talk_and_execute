@@ -2,5 +2,5 @@ package com.example.talkandexecute.model
 
 data class SpeechState(
     val speechResult: String = "",
-    val geminiResult: String = ""
+    val llmResult: String = ""
 )

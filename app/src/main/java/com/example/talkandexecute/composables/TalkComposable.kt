@@ -42,12 +42,16 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modifier: Modifier = Modifier) {
+fun TalkComposable(
+    viewModel: ChatGPTViewModel,
+    audioManager: AudioManager,
+    modifier: Modifier = Modifier
+) {
 
     // Based on the result adjust the volume.
-    if (viewModel.speechState.geminiResult.contains("up")) {
+    if (viewModel.speechState.llmResult.contains("up")) {
         audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
-    } else if (viewModel.speechState.geminiResult.contains("down")) {
+    } else if (viewModel.speechState.llmResult.contains("down")) {
         audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
     }
 
@@ -93,23 +97,24 @@ fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modi
                 .clip(CircleShape)
                 .clickable { /* Do something */ }
                 .pointerInteropFilter {
-                when (it.action) {
-                    MotionEvent.ACTION_UP -> {
-                        // viewModel.stopListening()
-                        // or for offline transcription
-                        viewModel.stopRecordingWav()
-                        viewModel.speechState = viewModel.speechState.copy(speechResult = "")
-                    }
+                    when (it.action) {
+                        MotionEvent.ACTION_UP -> {
+                            // viewModel.stopListening()
+                            // or for offline transcription
+                            viewModel.stopRecordingWav()
+                            viewModel.speechState = viewModel.speechState.copy(speechResult = "")
+                        }
 
-                    else -> {
-                        // viewModel.startListening()
-                        // or for offline transcription
-                        viewModel.startRecordingWav()
-                        viewModel.speechState = viewModel.speechState.copy(geminiResult = "")
+                        else -> {
+                            // viewModel.startListening()
+                            // or for offline transcription
+                            viewModel.startRecordingWav()
+                            viewModel.speechState = viewModel.speechState.copy(speechResult = "")
+                            viewModel.speechState = viewModel.speechState.copy(llmResult = "")
+                        }
                     }
-                }
-                true
-            },
+                    true
+                },
             contentScale = ContentScale.Fit,
             colorFilter = ColorFilter.tint(colorResource(id = R.color.teal_700))
         )
@@ -154,7 +159,10 @@ fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modi
                     .padding(vertical = 16.dp, horizontal = 16.dp)
                     .height(32.dp)
                     .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
-                    .clickable { viewModel.pickAPI(false) }
+                    .clickable {
+                        viewModel.pickAPI(false)
+                        viewModel.speechState = viewModel.speechState.copy(llmResult = "")
+                    }
                     .wrapContentSize(Alignment.Center),
                 color = Color.White,
                 fontSize = 16.sp
@@ -170,7 +178,10 @@ fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modi
                     .padding(vertical = 16.dp, horizontal = 16.dp)
                     .height(32.dp)
                     .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
-                    .clickable { viewModel.pickAPI(true) }
+                    .clickable {
+                        viewModel.pickAPI(true)
+                        viewModel.speechState = viewModel.speechState.copy(llmResult = "")
+                    }
                     .wrapContentSize(Alignment.Center),
                 color = Color.White,
                 fontSize = 16.sp
@@ -185,7 +196,7 @@ fun TalkComposable(viewModel: ChatGPTViewModel, audioManager: AudioManager, modi
                 .padding(start = 16.dp, end = 16.dp)
         ) {
             Text(
-                text = viewModel.speechState.geminiResult,
+                text = viewModel.speechState.llmResult,
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.Center)
