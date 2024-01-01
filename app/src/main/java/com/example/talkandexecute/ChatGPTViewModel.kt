@@ -121,18 +121,19 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
     fun pickAPI(geminiAPI: Boolean) {
         try {
             viewModelScope.launch(Dispatchers.Default) {
+                val completeString =
+                    "I say $transcribedText. As an assistant how can you help me?\n" +
+                            "Pick one from the options below if it is related to volume and write only the two words:\n" +
+                            "volume up\n" +
+                            "volume down\n" +
+                            "if it is not related to volume answer the below two words: \n" +
+                            "volume stable"
                 speechState = if (!geminiAPI) {
-                    val returnedText = createChatCompletion(transcribedText)
+                    Log.v("viewmodelChat", completeString)
+                    val returnedText = createChatCompletion(completeString)
                     speechState.copy(llmResult = returnedText)
                 } else {
-                    val completeString =
-                        "I say $transcribedText. As an assistant how can you help me?\n" +
-                                "Pick one from the options below if it is related to volume and write only the two words:\n" +
-                                "volume up\n" +
-                                "volume down\n" +
-                                "if it is not related to volume answer the below two words: \n" +
-                                "volume stable"
-                    Log.v("viewmodel", completeString)
+                    Log.v("viewmodelGem", completeString)
                     val returnedText = generativeModel.generateContent(completeString)
                     speechState.copy(llmResult = returnedText.text!!)
                 }
@@ -252,15 +253,9 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun createChatCompletion(prompt: String): String {
+    private fun createChatCompletion(completeString: String): String {
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
-        val completeString = "I say $prompt. As an assistant how can you help me?\n" +
-                "Pick one from the options below if it is related to volume and write only the two words:\n" +
-                "volume up\n" +
-                "volume down\n" +
-                "if it is not related to volume answer the below two words: \n" +
-                "volume stable"
 
         val messagesArray = JSONArray()
         messagesArray.put(
