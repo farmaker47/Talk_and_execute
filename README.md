@@ -8,4 +8,4 @@ More information at this [Medium](https://farmaker47.medium.com/using-palm-api-i
 <img src="palm_responding.png" height = "600" width="350"> 
 </p>
 
-Important = Google ML Developer Programs team supported this work by providing Google Cloud Credit
+Important: Google ML Developer Programs team supported this work by providing Google Cloud Credit
