@@ -6,5 +6,5 @@ It is a small PoC of an assistant using LLMs.
 More information at this [Medium](https://medium.com/p/3165976d753d) blog post.
 
 <p align="center">
-<img src="offline_whisper.png" height = "600" width="350"> 
+<img src="both_apis.png" height = "600" width="350"> 
 </p>
