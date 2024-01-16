@@ -96,14 +96,14 @@ class WhisperEngine(private val context: Context) : IWhisperEngine {
         // Create input tensor
         val inputTensor = mInterpreter!!.getInputTensor(0)
         val inputBuffer = TensorBuffer.createFixedSize(inputTensor.shape(), inputTensor.dataType())
-        Log.d(TAG, "Input Tensor Dump ===>")
-        printTensorDump(inputTensor)
+        // Log.d(TAG, "Input Tensor Dump ===>")
+        // printTensorDump(inputTensor)
 
         // Create output tensor
         val outputTensor = mInterpreter!!.getOutputTensor(0)
         val outputBuffer = TensorBuffer.createFixedSize(outputTensor.shape(), DataType.FLOAT32)
-        Log.d(TAG, "Output Tensor Dump ===>")
-        printTensorDump(outputTensor)
+        // Log.d(TAG, "Output Tensor Dump ===>")
+        // printTensorDump(outputTensor)
 
         // Load input data
         val inputSize =
