@@ -25,14 +25,20 @@ project("talkandexecute")
 # System.loadLibrary() and pass the name of the library defined here;
 # for GameActivity/NativeActivity derived applications, the same library name must be
 # used in the AndroidManifest.xml file.
+set(OPTIMIZATION_FLAGS -Ofast -fopenmp-simd -funroll-all-loops -Wall -Wextra)
 add_library(${CMAKE_PROJECT_NAME} SHARED
-    # List C/C++ source files with relative paths to this CMakeLists.txt.
-    talkandexecute.cpp talkandexecuteJNI.cpp)
+        # List C/C++ source files with relative paths to this CMakeLists.txt.
+        talkandexecute.cpp talkandexecuteJNI.cpp inference.c)
 
 # Specifies libraries CMake should link to your target library. You
 # can link libraries from various origins, such as libraries defined in this
 # build script, prebuilt third-party libraries, or Android system libraries.
 target_link_libraries(${CMAKE_PROJECT_NAME}
-    # List libraries link to the target library
-    android
-    log)
+        # List libraries link to the target library
+        android
+        log
+        -lm
+        -fopenmp
+        -static-openmp)
+
+target_compile_options(${PROJECT_NAME} PUBLIC $<$<COMPILE_LANGUAGE:C>:${OPTIMIZATION_FLAGS}>)

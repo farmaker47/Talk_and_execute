@@ -156,7 +156,7 @@ fun TalkComposable(
                 text = "ChatGPT",
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 16.dp, horizontal = 16.dp)
+                    .padding(vertical = 16.dp, horizontal = 8.dp)
                     .height(32.dp)
                     .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
                     .clickable {
@@ -168,18 +168,37 @@ fun TalkComposable(
                 fontSize = 16.sp
             )
 
-            Spacer(modifier = modifier.width(16.dp))
+            Spacer(modifier = modifier.width(8.dp))
 
             // Button for Gemini
             Text(
                 text = "Gemini",
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 16.dp, horizontal = 16.dp)
+                    .padding(vertical = 16.dp, horizontal = 8.dp)
                     .height(32.dp)
                     .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
                     .clickable {
                         viewModel.pickAPI(true)
+                        viewModel.speechState = viewModel.speechState.copy(llmResult = "")
+                    }
+                    .wrapContentSize(Alignment.Center),
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            Spacer(modifier = modifier.width(8.dp))
+
+            // Button for offline LLM
+            Text(
+                text = "Local",
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 16.dp, horizontal = 8.dp)
+                    .height(32.dp)
+                    .border(1.dp, borderColor, shape = RoundedCornerShape(4.dp))
+                    .clickable {
+                        viewModel.runOfflineLLM()
                         viewModel.speechState = viewModel.speechState.copy(llmResult = "")
                     }
                     .wrapContentSize(Alignment.Center),

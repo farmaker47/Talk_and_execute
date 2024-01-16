@@ -10,6 +10,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkandexecute.classification.AudioClassificationHelper
+import com.example.talkandexecute.llm.InferenceRunner
+import com.example.talkandexecute.llm.InferenceRunnerManager
+import com.example.talkandexecute.llm.copyAssets
 import com.example.talkandexecute.model.AudioToText
 import com.example.talkandexecute.model.GeneratedAnswer
 import com.example.talkandexecute.model.SpeechState
@@ -83,11 +86,41 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
     )
     private var transcribedText = ""
 
+    // LLM
+    private lateinit var inferenceRunnerManager: InferenceRunnerManager
+
+    private val callback = object : InferenceRunner.InferenceCallback {
+        override fun onNewResult(token: String?) {
+            token?.let {
+                val newLlmResult = "${speechState.llmResult}$it" // Concatenate the new text
+                speechState = speechState.copy(llmResult = newLlmResult)
+            }
+        }
+    }
+
     init {
         audioClassificationHelper.initClassifier()
         whisperEngine.initialize(MODEL_PATH, getFilePath(VOCAB_PATH, application), false)
         recorder.setFilePath(getFilePath(RECORDING_FILE_WAV, application))
+        // LLM
+        viewModelScope.launch {
+            val checkpoint = "model_2570.bin"
+            val tokenizer = "tok2570.bin"
+            val assetsFolder = application.copyAssets(arrayOf(checkpoint, tokenizer))
+            initInference(assetsFolder, checkpoint, tokenizer)
+        }
     }
+
+    // LLM
+    private fun initInference(assetsFolder: String, checkpoint: String, tokenizer: String) {
+        inferenceRunnerManager =
+            InferenceRunnerManager(callback, assetsFolder, checkpoint, tokenizer)
+    }
+
+    fun runOfflineLLM() {
+        inferenceRunnerManager.run(transcribedText)
+    }
+
 
     fun startRecordingWav() {
         recorder.start()
