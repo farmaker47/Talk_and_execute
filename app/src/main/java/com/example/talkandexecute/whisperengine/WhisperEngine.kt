@@ -79,13 +79,13 @@ class WhisperEngine(private val context: Context) : IWhisperEngine {
 
     private fun getMelSpectrogram(wavePath: String?): FloatArray {
         // Get samples in PCM_FLOAT format
-        val time = System.currentTimeMillis()
+        /*val time = System.currentTimeMillis()
         val samples = getSamples(wavePath)
         Log.v("inference_get_samples", (System.currentTimeMillis() - time).toString())
         val fixedInputSize = WhisperUtil.WHISPER_SAMPLE_RATE * WhisperUtil.WHISPER_CHUNK_SIZE
         val inputSamples = FloatArray(fixedInputSize)
         val copyLength = Math.min(samples.size, fixedInputSize)
-        System.arraycopy(samples, 0, inputSamples, 0, copyLength)
+        System.arraycopy(samples, 0, inputSamples, 0, copyLength)*/
         val time2 = System.currentTimeMillis()
         val value = transcribeFileWithMel(nativePtr, wavePath, mWhisperUtil.getFilters())
         Log.v("inference_get_mel", (System.currentTimeMillis() - time2).toString())
