@@ -161,7 +161,7 @@ void read_checkpoint(char *checkpoint, Config *config, TransformerWeights *weigh
     }
     // read in the config header
     if (fread(config, sizeof(Config), 1, file) != 1) { exit(EXIT_FAILURE); }
-    // negative vocab size is hacky way of signaling unshared weights. bit yikes.
+    // negative vocab size is hacky way of signaling unshared weights.
     int shared_weights = config->vocab_size > 0 ? 1 : 0;
     config->vocab_size = abs(config->vocab_size);
     // figure out the file size
@@ -238,7 +238,6 @@ void softmax(float *x, int size) {
 
 void matmul(float *xout, float *x, float *w, int n, int d) {
     // W (d,n) @ x (n,) -> xout (d,)
-    // by far the most amount of time is spent inside this little function
     int i;
 #pragma omp parallel for private(i)
     for (i = 0; i < d; i++) {
@@ -251,8 +250,6 @@ void matmul(float *xout, float *x, float *w, int n, int d) {
 }
 
 float *forward(Transformer *transformer, int token, int pos) {
-
-    // a few convenience variables
     Config *p = &transformer->config;
     TransformerWeights *w = &transformer->weights;
     RunState *s = &transformer->state;
@@ -302,7 +299,7 @@ float *forward(Transformer *transformer, int token, int pos) {
         memcpy(key_cache_row, s->k, kv_dim * sizeof(*key_cache_row));
         memcpy(value_cache_row, s->v, kv_dim * sizeof(*value_cache_row));
 
-        // multihead attention. iterate over all heads
+        // multi head attention. iterate over all heads
         int h;
 #pragma omp parallel for private(h)
         for (h = 0; h < p->n_heads; h++) {
@@ -363,7 +360,7 @@ float *forward(Transformer *transformer, int token, int pos) {
             s->hb[i] = s->hb[i] * (1.0f / (1.0f + expf(-s->hb[i])));
         }
 
-        // elementwise multiply with w3(x)
+        // element wise multiply with w3(x)
         for (int i = 0; i < hidden_dim; i++) {
             s->hb[i] = s->hb[i] * s->hb2[i];
         }
@@ -397,7 +394,6 @@ typedef struct {
 } Tokenizer;
 
 void build_tokenizer(Tokenizer *t, char *tokenizer_path, int vocab_size) {
-    // i should have written the vocab_size into the tokenizer file... sigh
     t->vocab_size = vocab_size;
     // malloc space to hold the scores and the strings
     t->vocab = (char **) malloc(vocab_size * sizeof(char *));
@@ -473,7 +469,7 @@ int str_lookup(char *str, TokenIndex *sorted_vocab, int vocab_size) {
 }
 
 void encode(Tokenizer *t, char *text, int *tokens, int *n_tokens) {
-    // encode the string text (input) into an upper-bound preallocated tokens[] array
+    // encode the string text (input) into an upper-bound pre allocated tokens[] array
 
     // sort vocabulary
     TokenIndex *sorted_vocab = malloc(t->vocab_size * sizeof(TokenIndex));
@@ -492,7 +488,7 @@ void encode(Tokenizer *t, char *text, int *tokens, int *n_tokens) {
     tokens[0] = str_lookup(" ", sorted_vocab, t->vocab_size);
     *n_tokens = 1; // the number of tokens
 
-    // Okay UTF-8 time. This will get messy. Here is the reference from Wikipedia:
+    // UTF-8 time. Here is the reference from Wikipedia:
     // Code point ↔ UTF-8 conversion
     // First code point	Last code point	Byte 1	Byte 2	Byte 3	Byte 4
     // U+0000	U+007F	    0xxxxxxx
@@ -519,7 +515,7 @@ void encode(Tokenizer *t, char *text, int *tokens, int *n_tokens) {
         str_buffer[str_len] = '\0';
 
         // while the next character is a continuation byte, continue appending
-        // but if there are too many of them, just stop to avoid overruning str_buffer size.
+        // but if there are too many of them, just stop to avoid overrunning str_buffer size.
         if ((*(c + 1) & 0xC0) == 0x80 && str_len < 4) {
             continue;
         }
@@ -768,7 +764,7 @@ int run_inference(JNIEnv *env, jobject thiz, char *checkpoint_path, char *tokeni
         // forward the transformer to get logits for the next token
         float *logits = forward(&transformer, token, pos);
 
-        // advance the state state machine
+        // advance the state machine
         if (pos < num_prompt_tokens) {
             // if we are still processing the input prompt, force the next prompt token
             next = prompt_tokens[pos];

@@ -2,7 +2,6 @@ package com.example.talkandexecute.whisperengine
 
 import android.content.Context
 import android.util.Log
-import com.example.talkandexecute.utils.WaveUtil.getSamples
 import com.example.talkandexecute.utils.WhisperUtil
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
@@ -115,6 +114,8 @@ class WhisperEngine(private val context: Context) : IWhisperEngine {
         }
 
         inputBuffer.loadBuffer(inputBuf)
+
+        //mInterpreter!!.resizeInput(0, intArrayOf(1,80,3000))
 
         // Run inference
         mInterpreter!!.run(inputBuffer.buffer, outputBuffer.buffer)

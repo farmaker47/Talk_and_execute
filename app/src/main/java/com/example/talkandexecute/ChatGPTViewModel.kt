@@ -327,7 +327,7 @@ class ChatGPTViewModel(application: Application) : AndroidViewModel(application)
 
     companion object {
 
-        private const val MODEL_PATH = "whisper_tiny_english_14.tflite"
+        private const val MODEL_PATH = "whisper_en_100_int_14.tflite"
         private const val VOCAB_PATH = "filters_vocab_en.bin"
         private const val RECORDING_FILE = "recording.mp3"
         private const val RECORDING_FILE_WAV = "recording.wav"
